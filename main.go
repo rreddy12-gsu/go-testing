@@ -41,6 +41,18 @@ func cheapest(stores []Store, item string) Store {
 	return cheapestStore
 }
 
+func find(stores []Store, item string) []Store {
+	storesWith := []Store{}
+	for _, store := range stores {
+		for _, i := range store.Items {
+			if i.Name == item {
+				storesWith = append(storesWith, store)
+			}
+		}
+	}
+	return storesWith
+}
+
 func main() {
 	stores := []Store{
 		{
@@ -64,17 +76,24 @@ func main() {
 				{"Banana", 0.1},
 			},
 		},
+		{
+			"Kroger",
+			[]Item{
+				{"Banana", 3.00},
+			},
+		},
 	}
 
 	// fmt.Println(stores)
-	for _, store := range stores {
-		msg := ""
-		msg += store.Name + " has: "
-		for _, item := range store.Items {
-			msg += item.Name + " for $" + fmt.Sprintf("%.2f", item.Price) + ", "
-		}
-		fmt.Println(msg[:len(msg)-2])
-	}
-	fmt.Println(listStores(stores))
-	fmt.Println(cheapest(stores, "Banana").Name)
+	// for _, store := range stores {
+	// 	msg := ""
+	// 	msg += store.Name + " has: "
+	// 	for _, item := range store.Items {
+	// 		msg += item.Name + " for $" + fmt.Sprintf("%.2f", item.Price) + ", "
+	// 	}
+	// 	fmt.Println(msg[:len(msg)-2])
+	// }
+	fmt.Println("The stores offered are ", listStores(stores))
+	fmt.Println(cheapest(stores, "Banana").Name + " has the cheapest bananas")
+	fmt.Println(find(stores, "Banana"))
 }
