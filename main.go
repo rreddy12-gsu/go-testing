@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"slices"
+	"github.com/kelvins/geocoder"
 )
 
 type Item struct {
@@ -96,4 +97,43 @@ func main() {
 	fmt.Println("The stores offered are ", listStores(stores))
 	fmt.Println(cheapest(stores, "Banana").Name + " has the cheapest bananas")
 	fmt.Println(find(stores, "Banana"))
+	address := geocoder.Address{
+		Street:  "Central Park West",
+		Number:  115,
+		City:    "New York",
+		State:   "New York",
+		Country: "United States",
+	}
+
+	location, err := geocoder.Geocoding(address)
+
+	if err != nil {
+		fmt.Println("Could not get the location: ", err)
+	} else {
+		fmt.Println("Latitude: ", location.Latitude)
+		fmt.Println("Longitude: ", location.Longitude)
+	}
+
+	location = geocoder.Location{
+		Latitude:  40.775807,
+		Longitude: -73.97632,
+	}
+
+	// Convert location (latitude, longitude) to a slice of addresses
+	addresses, err := geocoder.GeocodingReverse(location)
+
+	if err != nil {
+		fmt.Println("Could not get the addresses: ", err)
+	} else {
+		// Usually, the first address returned from the API
+		// is more detailed, so let's work with it
+		address = addresses[0]
+
+		// Print the address formatted by the geocoder package
+		fmt.Println(address.FormatAddress())
+		// Print the formatted address from the API
+		fmt.Println(address.FormattedAddress)
+		// Print the type of the address
+		fmt.Println(address.Types)
+	}
 }
