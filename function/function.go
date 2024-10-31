@@ -2,27 +2,27 @@
 package cxwh
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
-	"context"
-	"io"
+	"slices"
+
 	"cloud.google.com/go/storage"
 )
 
 type item struct {
-	Name string `json:"name"`
-	Price float32 `json:"price"`
+	Name       string   `json:"name"`
+	Price      float32  `json:"price"`
 	Categories []string `json:"categories"`
 }
 
 type store struct {
-	Name string `json:"name"`
+	Name  string `json:"name"`
 	Items []item `json:"items"`
 }
-
-
 
 type fulfillmentInfo struct {
 	Tag string `json:"tag"`
@@ -96,11 +96,12 @@ func confirm(request webhookRequest) (webhookResponse, error) {
 	return response, nil
 }
 
-func stores(request webhookRequest) (webhookResponse, error) {
+func listStores(request webhookRequest) (webhookResponse, error) {
+
 	t := ""
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
-	if (err != nil) {
+	if err != nil {
 		fmt.Println("could not create client")
 	}
 
@@ -109,7 +110,62 @@ func stores(request webhookRequest) (webhookResponse, error) {
 	obj := bkt.Object("store1")
 
 	r, err := obj.NewReader(ctx)
-	if (err != nil) {
+	if err != nil {
+		fmt.Println("could not create reader")
+	}
+
+	data, err := io.ReadAll(r)
+	if err != nil {
+		fmt.Println("could not read")
+	}
+	var stores []store
+	json.Unmarshal(data, &stores)
+	fmt.Println(stores)
+	r.Close()
+
+	storeNames := []string{}
+	for _, store := range stores {
+		if !slices.Contains(storeNames, store.Name) {
+			storeNames = append(storeNames, store.Name)
+		}
+	}
+
+	t += fmt.Sprint(storeNames)
+
+	p := map[string]interface{}{"stores": stores}
+
+	response := webhookResponse{
+		FulfillmentResponse: fulfillmentResponse{
+			Messages: []responseMessage{
+				{
+					Text: text{
+						Text: []string{t},
+					},
+				},
+			},
+		},
+		SessionInfo: sessionInfo{
+			Parameters: p,
+		},
+	}
+
+	return response, nil
+}
+
+func stores(request webhookRequest) (webhookResponse, error) {
+	t := ""
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		fmt.Println("could not create client")
+	}
+
+	bkt := client.Bucket("stores-test")
+
+	obj := bkt.Object("store1")
+
+	r, err := obj.NewReader(ctx)
+	if err != nil {
 		fmt.Println("could not create reader")
 	}
 
@@ -175,6 +231,8 @@ func HandleWebhookRequest(w http.ResponseWriter, r *http.Request) {
 		response, err = confirm(request)
 	case "stores":
 		response, err = stores(request)
+	case "list":
+		response, err = listStores(request)
 	default:
 		err = fmt.Errorf("Unknown tag: %s", tag)
 	}
