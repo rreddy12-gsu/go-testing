@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"slices"
 
@@ -172,7 +173,44 @@ func listStores(request webhookRequest) (webhookResponse, error) {
 	return response, nil
 }
 
-func getStores(bucket string, object string) ([]store) {
+func cheapest(request webhookRequest) (webhookResponse, error) {
+	t := ""
+
+	stores := getStores("stores-test", "stores")
+
+	item := request.SessionInfo.Parameters["item"]
+
+	cheapestStore := store{}
+	var price float32 = math.MaxFloat32
+	for _, store := range stores {
+		for _, i := range store.Items {
+			if i.Name == item {
+				if i.Price <= price {
+					price = i.Price
+					cheapestStore = store
+				}
+			}
+		}
+	}
+
+	response := webhookResponse{
+		FulfillmentResponse: fulfillmentResponse{
+			Messages: []responseMessage{
+				{
+					Text: text{
+						Text: []string{t},
+					},
+				},
+			},
+		},
+		SessionInfo: sessionInfo{
+			Parameters: map[string]interface{}{"cancel-period": "2"},
+		},
+	}
+	return response, nil
+}
+
+func getStores(bucket string, object string) []store {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {

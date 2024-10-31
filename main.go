@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"slices"
+
 	"github.com/kelvins/geocoder"
 )
 
@@ -28,7 +30,7 @@ func listStores(stores []Store) []string {
 
 func cheapest(stores []Store, item string) Store {
 	cheapestStore := Store{}
-	var price float32 = 10000000
+	var price float32 = math.MaxFloat32
 	for _, store := range stores {
 		for _, i := range store.Items {
 			if i.Name == item {
