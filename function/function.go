@@ -193,6 +193,10 @@ func cheapest(request webhookRequest) (webhookResponse, error) {
 		}
 	}
 
+	t += fmt.Sprintf("it is sold at %s for %.2f", cheapestStore.Name, price)
+
+	p := map[string]interface{}{"cheapest": cheapestStore}
+
 	response := webhookResponse{
 		FulfillmentResponse: fulfillmentResponse{
 			Messages: []responseMessage{
@@ -204,7 +208,7 @@ func cheapest(request webhookRequest) (webhookResponse, error) {
 			},
 		},
 		SessionInfo: sessionInfo{
-			Parameters: map[string]interface{}{"cancel-period": "2"},
+			Parameters: p,
 		},
 	}
 	return response, nil
@@ -268,6 +272,8 @@ func HandleWebhookRequest(w http.ResponseWriter, r *http.Request) {
 		response, err = listStores(request)
 	case "find":
 		response, err = findItem(request)
+	case "cheapest":
+		response, err = cheapest(request)
 	default:
 		err = fmt.Errorf("Unknown tag: %s", tag)
 	}
