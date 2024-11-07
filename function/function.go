@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"slices"
+	"strings"
 
 	"cloud.google.com/go/storage"
 )
@@ -119,6 +120,8 @@ func findItem(request webhookRequest) (webhookResponse, error) {
 		storeNames = append(storeNames, store.Name)
 	}
 
+	t += "This item is sold at: "
+	t += strings.Join(storeNames, ", ")
 	t += fmt.Sprint(storeNames)
 
 	response := webhookResponse{
@@ -151,7 +154,8 @@ func listStores(request webhookRequest) (webhookResponse, error) {
 		}
 	}
 
-	t += fmt.Sprint(storeNames)
+	t += "This item is sold at: "
+	t += strings.Join(storeNames, ", ")
 
 	p := map[string]interface{}{"stores": stores}
 
